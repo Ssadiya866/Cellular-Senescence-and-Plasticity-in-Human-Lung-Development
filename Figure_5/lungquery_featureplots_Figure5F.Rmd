@@ -1,0 +1,126 @@
+---
+title: "lungquery_featureplots"
+output: html_document
+date: "2026-05-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+```
+
+```{r}
+lungQuery <-readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_Az_Normalized.rds")
+```
+```{r diagnostics}
+# Check working directory
+message("Working directory: ", getwd())
+
+# Check if lungQuery exists
+message("lungQuery exists: ", exists("lungQuery"))
+
+# If it exists, check it is a Seurat object
+if (exists("lungQuery")) {
+  message("Class: ", class(lungQuery))
+  message("Cells: ", ncol(lungQuery))
+} else {
+  message("lungQuery NOT FOUND — check your loading chunk")
+}
+```
+
+
+```{r}
+features_all <- c("TGFBR2", 
+"IGF1R",
+"EGFR",
+"PDGFRA",
+"IL6ST",
+"IGFBP5",
+"CDKN1B",
+"MYCBP2",
+"BMPR2",
+"JAK1",
+"ZEB2",
+"ZEB1",
+"KMT2A",
+"DNMT3A",
+"DNMT1",
+"FOXO1",
+"RUNX1",
+"CDKN1A",
+"MALAT1",
+"NEAT1")
+```
+
+features_all <- c("AOPEP","CD44","SPRR1A","KRT78","CST1","HOXC11")
+custom <- subset(lungQuery, subset = Donor_Group %in% groups)
+
+lungQuery <- 
+
+```{r}
+getwd()
+```
+
+
+feat <- 'NEAT1'
+```{r featureplots-earlysaccular-alveolar-ptbpd, echo=TRUE, warning=FALSE, message=FALSE}
+
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+
+dir.create("Plots6", showWarnings = FALSE)
+
+features_all <- c("IGF1R", "BMPR2", "ZEB1", "ZEB2")
+
+groups_keep <- c("PT_NEWBORN", "FT_NEWBORN", "PT_BPD")
+
+lung_subset <- subset(
+  lungQuery,
+  subset = Donor_Group %in% groups_keep
+)
+
+lung_subset$Donor_Group <- factor(
+  lung_subset$Donor_Group,
+  levels = c("PT_NEWBORN", "FT_NEWBORN", "PT_BPD"),
+  labels = c("EarlySaccular", "Alveolar", "PT_BPD")
+)
+
+for (feat in features_all) {
+
+  p <- FeaturePlot(
+    object = lung_subset,
+    features = feat,
+    split.by = "Donor_Group",
+    raster = FALSE,
+    cols = c("#89cff0", "grey", "red")
+  ) +
+    patchwork::plot_layout(ncol = 3, nrow = 1) &
+    ggplot2::theme(
+      legend.position = "right",
+      strip.text = element_text(size = 14, face = "bold")
+    )
+
+  print(p)
+
+  ggsave(
+    filename = paste0(
+      "Plots6/FeaturePlot_",
+      feat,
+      "_EarlySaccular_Alveolar_PTBPD.png"
+    ),
+    plot = p,
+    width = 12,
+    height = 4,
+    dpi = 300
+  )
+}
+```
+
