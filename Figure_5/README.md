@@ -1,2 +1,5 @@
-Figure 5. Developmental signaling and fibroblast niche analyses.
-This folder contains scripts used to generate developmental activation scores, gene expression analyses, pathway enrichment analyses, heatmaps, and fibroblast niche characterization across lung development and BPD.
+# Figure 5
+README.md
+Fig5_FeaturePlots.Rmd  (Panels E–F)
+Fig5_Heatmaps.Rmd   (Panels D, G, H)
+Fig5_Pathway_Enrichment.Rmd  (Panel J)
