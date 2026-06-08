@@ -1,0 +1,44 @@
+---
+title: "lungquery_UMAPS_FINEST"
+output: html_document
+date: "2026-05-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+```
+```{r}
+lungQuery <-readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_Az_Normalized.rds")
+```
+```{r azimuth_umap, echo=TRUE, warning=FALSE, message=FALSE}
+dir.create("Plots_UMAP", showWarnings = FALSE)
+
+p_fine <- DimPlot(
+  lungQuery,
+  group.by = "predicted.ann_finest_level",
+  label = TRUE,
+  pt.size = 0.01,
+  label.size = 5,
+  repel = TRUE,
+  raster = FALSE
+) + ggtitle("Azimuth Annotation - Finest Level")
+
+ggsave(
+  filename = "Plots_UMAP/UMAP_Azimuth_Finest_Level.png",
+  plot = p_fine,
+  width = 16,
+  height = 12,
+  dpi = 300,
+  limitsize = FALSE
+)
+
+knitr::include_graphics("Plots_UMAP/UMAP_Azimuth_Finest_Level.png")
+
+
