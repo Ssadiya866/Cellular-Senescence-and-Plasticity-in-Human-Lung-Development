@@ -1,5 +1,5 @@
 ---
-title: "Figure 4L Dot Plot"
+title: "Figure 4k GO Dot Plot"
 output: html_document
 date: "2026-05-26"
 ---
@@ -15,13 +15,22 @@ library(dplyr)
 ```
 
 ```{r}
-df <- read_excel("Figure 4L.xlsx", sheet = "Dotplot_Data")
+Input Excel file
+This file contains DAVID/PANTHER pathway enrichment results used for Figure 4K.
 
-df
-```
-```{r}
-getwd()
-df <- read_excel("C:/Users/Sshaikh9/Downloads/Figure 4L.xlsx")
+Required sheet:
+Dotplot_Data
+Required columns:
+Pathway
+Enrichment_Score
+Dot_Size
+pvalue
+Pathway = enriched pathway term
+Enrichment_Score = pathway enrichment score used for x-axis
+Dot_Size = number of genes/counts represented by dot size
+pvalue = adjusted p-value or enrichment p-value used for dot color
+
+df <- read_excel("path_to_input/Figure4K_Dotplot_Input.xlsx", sheet = "Dotplot_Data")
 ```
 
 ```{r}
