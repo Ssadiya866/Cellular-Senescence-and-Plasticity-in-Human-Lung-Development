@@ -1,0 +1,112 @@
+---
+title: "Figure 4D"
+output: html_document
+date: "2026-06-18"
+---
+```{r}
+library(Seurat)
+library(readxl)
+library(dplyr)
+library(tibble)
+library(openxlsx)
+library(pheatmap)
+```
+
+```{r}
+lungQuery <- readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_AZ_Normalized.rds")
+```
+
+```{r}
+genes_fig4D <- c(
+  "NGF-AS1","NGF","TGFB2","TGFBR2","FGF2","PDGFC",
+  "VEGFC","FGF10","FGF10-AS1","FGF1","PDGFRB","VEGFA",
+  "IGF2R","PDGFA","EGFR","EGFR-AS1","HGF","PDGFRL",
+  "TGFBR1","IGF2","VEGFB","PDGFD","IGF1","FGF7",
+  "IGF1R","NGFR","GDF15","TGFB1","PDGFB","VEGFD",
+  "PDGFA-DT","NGFR-AS1"
+)
+
+group_order_obj <- c(
+  "PT-NEWBORN","FT-NEWBORN","INFANT",
+  "Children","Adolescent","Young-Adult"
+)
+
+group_order_export <- c(
+  "PT_NB","FT_NB","INFANT",
+  "Children","Adolescent","Young_Adult"
+)
+
+# Example: Fig 4D Adventitial fibroblasts
+cell_subset <- subset(
+  obj,
+  subset = predicted.ann_finest_level == "Adventitial fibroblasts"
+)
+
+genes_use <- intersect(genes_fig4D, rownames(cell_subset))
+
+avg_expr <- AverageExpression(
+  cell_subset,
+  features = genes_use,
+  group.by = "Donor_Group",
+  assay = "RNA",
+  slot = "data"
+)$RNA
+
+avg_expr <- as.matrix(avg_expr[genes_use, group_order_obj])
+colnames(avg_expr) <- group_order_export
+
+# Row-wise scaling for heatmap visualization
+heatmap_matrix <- t(scale(t(avg_expr)))
+
+# Export both raw average expression and scaled heatmap matrix
+write.xlsx(
+  list(
+    AverageExpression = round(avg_expr, 4),
+    Heatmap_RowScaled = round(heatmap_matrix, 2)
+  ),
+  file = "Fig4D_heatmap_R_source_data.xlsx",
+  rowNames = TRUE
+)
+```
+
+```{r}
+library(pheatmap)
+
+pheatmap(
+  heatmap_matrix,
+  color = colorRampPalette(
+    c("blue", "lightgrey", "yellow")
+  )(100),
+  breaks = seq(-2, 2, length.out = 101),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  border_color = NA
+)
+```
+
+```{r}
+# Row z-score matrix
+zscore_matrix <- t(scale(t(avg_expr)))
+
+# Clip values for heatmap display
+zscore_clipped <- zscore_matrix
+
+zscore_clipped[zscore_clipped > 2] <- 2
+zscore_clipped[zscore_clipped < -2] <- -2
+
+# Check
+head(zscore_clipped)
+```
+
+```{r}
+range(zscore_clipped)
+summary(as.vector(zscore_clipped))
+```
+
+```{r}
+write.csv(
+  round(zscore_clipped, 3),
+  "Fig4D_RowZscore_Used_For_Heatmap.csv"
+)
+```
+
