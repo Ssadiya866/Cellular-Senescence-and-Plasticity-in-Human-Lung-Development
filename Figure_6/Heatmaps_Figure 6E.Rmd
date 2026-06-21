@@ -1,0 +1,179 @@
+---
+title: "Untitled"
+output: html_document
+date: "2026-06-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(Matrix)
+library(pheatmap)
+
+genes_plasticity <- c(
+  "KLF4","POU5F1","MYC","MYCBP2","SOX2",
+  "HDAC2","CTNNB1","EP300","CEBPB","ID2",
+  "KMT2A","KRT7","KRT8"
+)
+
+stage_order <- c(
+  "Early Saccular",
+  "Saccular",
+  "Early Alveolar",
+  "Alveolar",
+  "PT_BPD"
+)
+
+make_plasticity_heatmap <- function(obj, cell_label, output_prefix) {
+  
+  sub_obj <- subset(
+    obj,
+    subset = predicted.ann_finest_level == cell_label
+  )
+  
+  sub_obj$Lung_Stage_Custom <- NA
+  
+  sub_obj$Lung_Stage_Custom[sub_obj$Donor %in% c("s062")] <- "Early Saccular"
+  sub_obj$Lung_Stage_Custom[sub_obj$Donor %in% c("s088", "s229", "s232")] <- "Saccular"
+  sub_obj$Lung_Stage_Custom[sub_obj$Donor %in% c("threeDayM", "twelveDayF")] <- "Early Alveolar"
+  sub_obj$Lung_Stage_Custom[sub_obj$Donor %in% c("twoYrOldM", "twoYrOldM2")] <- "Alveolar"
+  sub_obj$Lung_Stage_Custom[sub_obj$Donor_Group == "PT_BPD"] <- "PT_BPD"
+  
+  sub_obj <- subset(
+    sub_obj,
+    cells = rownames(sub_obj@meta.data)[sub_obj$Lung_Stage_Custom %in% stage_order]
+  )
+  
+  sub_obj$Lung_Stage_Custom <- factor(
+    sub_obj$Lung_Stage_Custom,
+    levels = stage_order
+  )
+  
+  print(cell_label)
+  print(table(sub_obj$Lung_Stage_Custom))
+  
+  expr_mat <- GetAssayData(
+    sub_obj,
+    assay = "RNA",
+    layer = "data"
+  )
+  
+  genes_use <- genes_plasticity[genes_plasticity %in% rownames(expr_mat)]
+  
+  expr_sub <- expr_mat[genes_use, , drop = FALSE]
+  meta <- sub_obj@meta.data
+  meta <- meta[colnames(expr_sub), ]
+  
+  avg_exp_raw <- sapply(stage_order, function(stage) {
+    cells <- rownames(meta)[meta$Lung_Stage_Custom == stage]
+    Matrix::rowMeans(expr_sub[, cells, drop = FALSE])
+  })
+  
+  avg_exp_raw <- as.matrix(avg_exp_raw)
+  colnames(avg_exp_raw) <- stage_order
+  
+  avg_exp_raw <- avg_exp_raw[rowSums(avg_exp_raw) > 0, , drop = FALSE]
+  avg_exp_raw <- avg_exp_raw[apply(avg_exp_raw, 1, sd) > 0, , drop = FALSE]
+  
+  avg_exp_z <- t(scale(t(avg_exp_raw)))
+  avg_exp_z <- avg_exp_z[complete.cases(avg_exp_z), , drop = FALSE]
+  
+  avg_exp_z_clipped <- avg_exp_z
+  avg_exp_z_clipped[avg_exp_z_clipped > 2] <- 2
+  avg_exp_z_clipped[avg_exp_z_clipped < -2] <- -2
+  
+  pheatmap(
+    avg_exp_z_clipped,
+    cluster_rows = FALSE,
+    cluster_cols = FALSE,
+    border_color = NA,
+    color = colorRampPalette(c("blue", "white", "darkorange"))(100),
+    breaks = seq(-2, 2, length.out = 101),
+    legend_breaks = c(-2, -1, 0, 1, 2),
+    legend_labels = c("-2", "-1", "0", "1", "2"),
+    fontsize_row = 8,
+    fontsize_col = 8,
+    cellwidth = 24,
+    cellheight = 12,
+    angle_col = 45,
+    main = cell_label
+  )
+  
+  write.csv(avg_exp_raw, paste0(output_prefix, "_RawAverageExpression.csv"))
+  write.csv(avg_exp_z, paste0(output_prefix, "_RowZscore.csv"))
+  write.csv(avg_exp_z_clipped, paste0(output_prefix, "_RowZscore_ClippedForPlot.csv"))
+  
+  return(avg_exp_z_clipped)
+}
+```
+
+
+```{r}
+AF_mat <- make_plasticity_heatmap(obj, "Alveolar fibroblasts", "Plasticity_AlveolarFibroblast")
+EC_mat <- make_plasticity_heatmap(obj, "EC general capillary", "Plasticity_EC_Capillary")
+AT2_mat <- make_plasticity_heatmap(obj, "AT2", "Plasticity_AT2")
+PAT2_mat <- make_plasticity_heatmap(obj, "Proliferating AT2", "Plasticity_ProliferatingAT2")
+TR_mat <- make_plasticity_heatmap(obj, "Transitional AT2-AT1", "Plasticity_TransitionalAT2_AT1")
+```
+
+```{r}
+write.csv(
+  EC_mat,
+  "EC_Capillary_PLOTTED_MATRIX.csv"
+)
+
+write.csv(
+  AT2_mat,
+  "AT2_PLOTTED_MATRIX.csv"
+)
+
+write.csv(
+  AF_mat,
+  "AlveolarFibroblast_PLOTTED_MATRIX.csv"
+)
+
+write.csv(
+  PAT2_mat,
+  "AT2_Proliferating_PLOTTED_MATRIX.csv"
+)
+
+write.csv(
+  TR_mat,
+  "Transitional_PLOTTED_MATRIX.csv"
+)
+```
+
+```{r}
+head(AF_mat)
+head(EC_mat)
+head(AT2_mat)
+```
+
+```{r}
+dim(AF_mat)
+dim(EC_mat)
+dim(AT2_mat)
+```
+
+
+```{r}
+AF_mat
+EC_mat
+AT2_mat
+PAT2_mat
+TR_mat
+```
+
+```{r}
+write.csv(AF_mat, "AF_PLOTTED_MATRIX.csv")
+write.csv(EC_mat, "EC_PLOTTED_MATRIX.csv")
+write.csv(AT2_mat, "AT2_PLOTTED_MATRIX.csv")
+write.csv(PAT2_mat, "AT2_Proliferating_PLOTTED_MATRIX.csv")
+write.csv(TR_mat, "Transitional_PLOTTED_MATRIX.csv")
+```
+
+
+
