@@ -1,0 +1,25 @@
+### Figure_6F-GO Enrichment Analysis of Core Upregulated Genes
+
+Gene Ontology (GO) enrichment analysis was performed on core genes upregulated in Early Alveolar samples compared with Late Alveolar and Mature Lung groups.
+
+Workflow:
+
+1. Differentially expressed genes were identified between Early Alveolar and Late Alveolar/Mature Lung developmental stages.
+2. Core upregulated genes were selected based on overlap analysis.
+3. Gene Ontology enrichment analysis was performed using DAVID and/or PANTHER functional annotation databases.
+4. Significantly enriched Biological Process (BP) and Molecular Function (MF) terms were extracted.
+5. Enrichment significance was visualized as -log10(p-value) bar plots.
+
+Output:
+
+Bar plots showing significantly enriched developmental, stem cell, DNA damage response, wound healing, Wnt signaling, histone modification, and transcription factor activity pathways associated with Early Alveolar development.
+
+Software:
+
+- DAVID Functional Annotation Tool
+- PANTHER Classification System
+- GraphPad Prism
+
+Visualization:
+
+Enrichment results exported from DAVID/PANTHER were plotted in GraphPad Prism.
