@@ -1,0 +1,138 @@
+---
+title: "fIGURE 5i gf"
+output: html_document
+date: "2026-05-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(pheatmap)
+
+# -------------------------
+senescence_genes <- c(
+  "IL18R1",
+  "IL1B",
+  "CXCL8",
+  "CDKN2B-AS1",
+  "CDKN1C",
+  "CDKN1A",
+  "IL18RAP",
+  "TP53I3",
+  "WRAP53",
+  "CDKN2D",
+  "GLB1L",
+  "TP53BP2",
+  "IL1A",
+  "CDKN2A",
+  "CDKN2C",
+  "CDKN2AIP",
+  "CDKN2B",
+  "CDKN2AIPNL",
+  "CDKN1B",
+  "TP53",
+  "IL6ST",
+  "CDKN3",
+  "GLB1"
+)
+
+senescence_genes <- senescence_genes[
+  senescence_genes %in% rownames(lungQuery)
+]
+
+# -----------------------------
+# Subset
+# -----------------------------
+
+obj_hm <- subset(
+  lungQuery,
+  subset = !is.na(Heatmap_Group)
+)
+
+obj_hm$Heatmap_Group <- factor(
+  obj_hm$Heatmap_Group,
+  levels = c(
+    "Canalicular",
+    "Early Saccular",
+    "Saccular",
+    "Alveolar",
+    "PT_BPD"
+  )
+)
+
+# -----------------------------
+# Average expression
+# -----------------------------
+
+avg_sen <- AverageExpression(
+  obj_hm,
+  features = senescence_genes,
+  group.by = "Heatmap_Group",
+  assays = "RNA",
+  slot = "data"
+)$RNA
+
+# Fix PT-BPD naming
+colnames(avg_sen) <- gsub(
+  "PT-BPD",
+  "PT_BPD",
+  colnames(avg_sen)
+)
+
+avg_sen <- avg_sen[, c(
+  "Canalicular",
+  "Early Saccular",
+  "Saccular",
+  "Alveolar",
+  "PT_BPD"
+)]
+
+# -----------------------------
+# Row Z-score
+# -----------------------------
+
+mat_sen <- t(scale(t(avg_sen)))
+
+mat_sen[is.na(mat_sen)] <- 0
+
+# Cap at ±2
+mat_sen[mat_sen > 2] <- 2
+mat_sen[mat_sen < -2] <- -2
+
+# -----------------------------
+# Save source data
+# -----------------------------
+
+write.csv(
+  avg_sen,
+  "Senescence_AverageExpression.csv"
+)
+
+write.csv(
+  mat_sen,
+  "Senescence_Zscore_Heatmap.csv"
+)
+
+# -----------------------------
+# Plot heatmap
+# -----------------------------
+
+pheatmap(
+  mat_sen,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  color = colorRampPalette(
+    c("blue","white","red")
+  )(100),
+  breaks = seq(-2,2,length.out = 101),
+  border_color = "black",
+  fontsize_row = 10,
+  fontsize_col = 10,
+  angle_col = 45,
+  main = "Senescence Markers"
+)
+
+```
