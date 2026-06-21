@@ -1,0 +1,156 @@
+---
+title: "Figure 4K"
+output: html_document
+date: "2026-05-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(dplyr)
+library(pheatmap)
+library(ggplot2)
+
+lungQuery <- readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_AZ_Normalized.rds")
+```
+
+```{r}
+# Subset EC general capillary cells
+ec_cap_obj <- subset(
+  lungQuery,
+  subset = predicted.ann_finest_level == "EC general capillary"
+)
+
+table(ec_cap_obj$predicted.ann_finest_level)
+
+# Define developmental stages
+ec_cap_obj$Lung_Stage_Custom <- NA
+
+ec_cap_obj$Lung_Stage_Custom[ec_cap_obj$Donor %in% c("s062")] <- "Early Saccular"
+ec_cap_obj$Lung_Stage_Custom[ec_cap_obj$Donor %in% c("s088", "s229", "s232")] <- "Saccular"
+ec_cap_obj$Lung_Stage_Custom[ec_cap_obj$Donor %in% c("threeDayM", "twelveDayF")] <- "Early Alveolar"
+ec_cap_obj$Lung_Stage_Custom[ec_cap_obj$Donor %in% c("twoYrOldM", "twoYrOldM2")] <- "Alveolar"
+ec_cap_obj$Lung_Stage_Custom[ec_cap_obj$Donor_Group == "PT_BPD"] <- "PT_BPD"
+
+stage_order <- c(
+  "Early Saccular",
+  "Saccular",
+  "Early Alveolar",
+  "Alveolar",
+  "PT_BPD"
+)
+
+# Keep only selected stages
+cells_use <- rownames(ec_cap_obj@meta.data)[
+  ec_cap_obj$Lung_Stage_Custom %in% stage_order
+]
+
+ec_cap_obj <- subset(ec_cap_obj, cells = cells_use)
+
+ec_cap_obj$Lung_Stage_Custom <- factor(
+  ec_cap_obj$Lung_Stage_Custom,
+  levels = stage_order
+)
+
+# Check cell numbers
+table(ec_cap_obj$Lung_Stage_Custom)
+table(ec_cap_obj$Donor, ec_cap_obj$Lung_Stage_Custom)
+
+# WNT / growth factor genes
+genes_use <- c(
+  "WNT10B",
+  "CTNNB1",
+  "AXIN2",
+  "LEF1",
+  "BMPR1B",
+  "BMPR2",
+  "TGFB1",
+  "TGFBR1",
+  "IGF1R",
+  "IGF2",
+  "PDGFA",
+  "VEGFA",
+  "ZEB1",
+  "ZEB2"
+)
+
+# Get expression matrix
+expr_mat <- GetAssayData(
+  ec_cap_obj,
+  assay = "RNA",
+  layer = "data"
+)
+
+genes_use <- genes_use[genes_use %in% rownames(expr_mat)]
+genes_use
+
+expr_sub <- expr_mat[genes_use, ]
+
+meta <- ec_cap_obj@meta.data
+meta <- meta[colnames(expr_sub), ]
+
+# Average expression by stage
+avg_exp <- sapply(stage_order, function(stage) {
+  cells <- rownames(meta)[meta$Lung_Stage_Custom == stage]
+  Matrix::rowMeans(expr_sub[, cells, drop = FALSE])
+})
+
+avg_exp <- as.matrix(avg_exp)
+colnames(avg_exp) <- stage_order
+
+# Remove genes with no expression / no variation
+avg_exp <- avg_exp[rowSums(avg_exp) > 0, ]
+avg_exp <- avg_exp[apply(avg_exp, 1, sd) > 0, ]
+
+# Z-score by gene
+avg_exp_z <- t(scale(t(avg_exp)))
+avg_exp_z <- avg_exp_z[complete.cases(avg_exp_z), ]
+
+# Plot heatmap
+pheatmap(
+  avg_exp_z,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  border_color = "black",
+  fontsize_row = 11,
+  fontsize_col = 11,
+  cellwidth = 30,
+  cellheight = 20,
+  angle_col = 45,
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(100),
+  main = "EC General Capillary WNT-Growth Factor Signaling"
+)
+
+# Save heatmap PDF
+pdf("EC_General_Capillary_WNT_GrowthFactor_Heatmap.pdf", width = 8, height = 7)
+
+pheatmap(
+  avg_exp_z,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  border_color = "black",
+  fontsize_row = 11,
+  fontsize_col = 11,
+  cellwidth = 30,
+  cellheight = 20,
+  angle_col = 45,
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(100),
+  main = "EC General Capillary WNT-Growth Factor Signaling"
+)
+
+dev.off()
+
+# Export CSV
+write.csv(
+  data.frame(
+    Gene = rownames(avg_exp_z),
+    avg_exp_z,
+    row.names = NULL
+  ),
+  "EC_General_Capillary_WNT_GrowthFactor_Heatmap_Zscore.csv",
+  row.names = FALSE,
+  quote = FALSE
+)
