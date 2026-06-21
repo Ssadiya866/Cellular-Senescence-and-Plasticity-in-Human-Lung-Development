@@ -1,5 +1,5 @@
 ---
-title: "Figure 4K"
+title: "Figure 4K_EC Capillary_HeatMap"
 output: html_document
 date: "2026-05-30"
 ---
@@ -14,7 +14,8 @@ library(dplyr)
 library(pheatmap)
 library(ggplot2)
 
-lungQuery <- readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_AZ_Normalized.rds")
+# Path to integrated Seurat object
+lungQuery <- readRDS("path_to_object/lungQuery_After_Az_Normalized.rds")
 ```
 
 ```{r}
