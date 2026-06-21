@@ -1,0 +1,109 @@
+---
+title: "Figure 4K"
+output: html_document
+date: "2026-05-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(dplyr)
+library(pheatmap)
+library(ggplot2)
+
+lungQuery <- readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_AZ_Normalized.rds")
+```
+
+```{r}
+# Subset Adventitial fibroblasts
+adv_obj <- subset(
+  obj,
+  subset = predicted.ann_finest_level == "Adventitial fibroblasts"
+)
+
+# Custom stage mapping
+adv_obj$Lung_Stage_Custom <- NA
+adv_obj$Lung_Stage_Custom[adv_obj$Donor %in% c("s062")] <- "Early Saccular"
+adv_obj$Lung_Stage_Custom[adv_obj$Donor %in% c("s088", "s229", "s232")] <- "Saccular"
+adv_obj$Lung_Stage_Custom[adv_obj$Donor %in% c("threeDayM", "twelveDayF")] <- "Early Alveolar"
+adv_obj$Lung_Stage_Custom[adv_obj$Donor %in% c("twoYrOldM", "twoYrOldM2")] <- "Alveolar"
+adv_obj$Lung_Stage_Custom[adv_obj$Donor_Group == "PT_BPD"] <- "PT_BPD"
+
+stage_order <- c(
+  "Early Saccular",
+  "Saccular",
+  "Early Alveolar",
+  "Alveolar",
+  "PT_BPD"
+)
+
+adv_obj <- subset(
+  adv_obj,
+  cells = rownames(adv_obj@meta.data)[adv_obj$Lung_Stage_Custom %in% stage_order]
+)
+
+adv_obj$Lung_Stage_Custom <- factor(
+  adv_obj$Lung_Stage_Custom,
+  levels = stage_order
+)
+
+table(adv_obj$Lung_Stage_Custom)
+
+# Replace with the exact 6 genes used in panel H
+genes_use <- c(
+  "KLF4", "POU5F1", "MYC", "MYCBP2", "SOX2", "HDAC2"
+)
+
+expr_mat <- GetAssayData(
+  adv_obj,
+  assay = "RNA",
+  layer = "data"
+)
+
+genes_use <- genes_use[genes_use %in% rownames(expr_mat)]
+
+expr_sub <- expr_mat[genes_use, ]
+meta <- adv_obj@meta.data
+meta <- meta[colnames(expr_sub), ]
+
+avg_exp_raw <- sapply(stage_order, function(stage) {
+  cells <- rownames(meta)[meta$Lung_Stage_Custom == stage]
+  Matrix::rowMeans(expr_sub[, cells, drop = FALSE])
+})
+
+avg_exp_raw <- as.matrix(avg_exp_raw)
+colnames(avg_exp_raw) <- stage_order
+
+avg_exp_raw <- avg_exp_raw[rowSums(avg_exp_raw) > 0, ]
+avg_exp_raw <- avg_exp_raw[apply(avg_exp_raw, 1, sd) > 0, ]
+
+avg_exp_z <- t(scale(t(avg_exp_raw)))
+avg_exp_z <- avg_exp_z[complete.cases(avg_exp_z), ]
+
+avg_exp_z_clipped <- avg_exp_z
+avg_exp_z_clipped[avg_exp_z_clipped > 1.5] <- 1.5
+avg_exp_z_clipped[avg_exp_z_clipped < -1.5] <- -1.5
+
+pheatmap(
+  avg_exp_z_clipped,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  border_color = NA,
+  color = colorRampPalette(c("#440154", "#31688E", "#35B779", "#FDE725"))(100),
+  breaks = seq(-1.5, 1.5, length.out = 101),
+  legend_breaks = c(-1.5, 0, 1.5),
+  legend_labels = c("-1.5", "0", "1.5"),
+  fontsize_row = 8,
+  fontsize_col = 8,
+  cellwidth = 22,
+  cellheight = 18,
+  angle_col = 45,
+  main = "Adventitial Fibroblast"
+)
+
+write.csv(avg_exp_raw, "Fig4H_AdventitialFibroblast_RawAverageExpression.csv")
+write.csv(avg_exp_z, "Fig4H_AdventitialFibroblast_RowZscore.csv")
+write.csv(avg_exp_z_clipped, "Fig4H_AdventitialFibroblast_RowZscore_Clipped_ForPlot.csv")
