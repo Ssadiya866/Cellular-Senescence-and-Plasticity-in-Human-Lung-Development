@@ -1,0 +1,29 @@
+# Figure 8B-Morphometric Analysis of Alveolar Architecture
+
+Mean alveolar wall distances were quantified from histological lung sections to assess differences in alveolar structure across developmental and BPD groups.
+
+## Workflow
+
+- Histological lung sections were imaged using brightfield microscopy.
+- Multiple representative regions of interest (ROIs) were selected from each donor.
+- Images were imported into ImageJ/Fiji and calibrated using the image scale.
+- Alveolar wall distances were measured using the ImageJ line measurement tool.
+- Measurements were averaged across ROIs for each donor.
+- Group comparisons and statistical analyses were performed using GraphPad Prism.
+
+## Input Data
+
+- PT-NB lung sections
+- FT-NB lung sections
+- BPD lung sections
+- Multiple ROIs per donor
+
+## Output
+
+- Mean alveolar wall distance measurements
+- Group-wise comparisons of alveolar architecture
+
+## Software
+
+- ImageJ/Fiji
+- GraphPad Prism
