@@ -1,0 +1,71 @@
+---
+title: "GO Barplot Figure 5G"
+output: html_document
+date: "2026-05-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+```
+
+```{r load-data}
+df <- read_excel("Figure_GO_source_data_with_curated_genes_5F.xlsx",
+                 sheet = "GO_source_data")
+
+df
+```
+
+```{r}
+df <- read_excel(file.choose())
+
+colnames(df)
+```
+
+```{r prepare-data}
+df <- df %>%
+  rename(
+    Pathway = `GO_Term`,
+    Count = `Gene_Count_from_plot`,
+    pvalue = `Adjusted_p_value`
+  ) %>%
+  mutate(
+    Pathway = factor(Pathway, levels = rev(Pathway))
+  )
+```
+
+```{r}
+df$pvalue_plot <- pmin(df$pvalue, 0.0025)
+
+p <- ggplot(df, aes(x = Count, y = Pathway, fill = pvalue_plot)) +
+  geom_col(width = 0.85) +
+  scale_fill_gradientn(
+    colours = c("red", "purple", "blue"),
+    limits = c(0.000006, 0.0025),
+    breaks = c(0.001, 0.0015, 0.002),
+    labels = c("0.001", "0.0015", "0.002"),
+    name = "pvalue"
+  ) +
+  scale_x_continuous(
+    limits = c(0, 80),
+    breaks = c(0, 20, 40, 60, 80)
+  ) +
+  labs(x = "Counts", y = NULL) +
+  theme_bw(base_size = 14) +
+  theme(
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(color = "black", size = 12),
+    axis.text.x = element_text(color = "black", size = 12),
+    axis.title.x = element_text(color = "black", size = 14, face = "bold"),
+    legend.position = "left"
+  )
+
+p
+```
+
