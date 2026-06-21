@@ -2,7 +2,7 @@
 
 This folder contains analyses associated with Figure 6, investigating cellular plasticity programs across human lung development and alveolar deficiency (PT-BPD).
 
-The analyses were performed using the integrated Harmony-corrected and Azimuth-annotated pediatric lung snRNA-seq dataset. Cellular plasticity-associated gene signatures were adapted from He et al. and evaluated across developmental stages and disease conditions.
+Cellular plasticity-associated gene signatures were adapted from He et al. and evaluated across developmental stages and disease conditions.
 
 ## Figure Components
 
@@ -10,13 +10,13 @@ The analyses were performed using the integrated Harmony-corrected and Azimuth-a
 Conceptual schematic illustrating the proposed role of cellular plasticity during lung development and alveolar deficiency.
 
 ### Panel B
-Comparison of cellular plasticity scores between Child and Young Adult lung samples.
+Gene Set Enrichment Analysis (GSEA)-derived SenMayo enrichment scores comparing Child and Young Adult lung cell populations.
 
 ### Panel C
-Comparison of cellular plasticity scores between PT-BPD (alveolar deficiency) and developmental reference groups.
+Gene Set Enrichment Analysis (GSEA)-derived SenMayo enrichment scores comparing PT-BPD (alveolar deficiency) with developmental reference groups.
 
 ### Panel D
-Scaled expression of cellular plasticity-associated genes across developmental stages and PT-BPD samples.
+Scaled expression of plasticity-associated genes across developmental stages and PT-BPD samples.
 
 ### Panel E
 Heatmap visualization of plasticity-associated transcriptional regulators across selected cell populations and developmental stages.
