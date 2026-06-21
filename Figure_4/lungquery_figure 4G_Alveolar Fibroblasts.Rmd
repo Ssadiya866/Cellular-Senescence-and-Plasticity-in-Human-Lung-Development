@@ -1,0 +1,211 @@
+---
+title: "Figure 4G"
+output: html_document
+date: "2026-05-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(dplyr)
+library(pheatmap)
+library(ggplot2)
+
+lungQuery <- readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_AZ_Normalized.rds")
+```
+
+```{r}
+
+# Subset Alveolar fibroblasts
+af_obj <- subset(
+  obj,
+  subset = predicted.ann_finest_level == "Alveolar fibroblasts"
+)
+
+# Define developmental stages
+af_obj$Lung_Stage_Custom <- NA
+
+af_obj$Lung_Stage_Custom[af_obj$Donor %in% c("s062")] <- "Early Saccular"
+af_obj$Lung_Stage_Custom[af_obj$Donor %in% c("s088", "s229", "s232")] <- "Saccular"
+af_obj$Lung_Stage_Custom[af_obj$Donor %in% c("threeDayM", "twelveDayF")] <- "Early Alveolar"
+af_obj$Lung_Stage_Custom[af_obj$Donor %in% c("twoYrOldM", "twoYrOldM2")] <- "Alveolar"
+af_obj$Lung_Stage_Custom[af_obj$Donor_Group == "PT_BPD"] <- "PT_BPD"
+
+stage_order <- c(
+  "Early Saccular",
+  "Saccular",
+  "Early Alveolar",
+  "Alveolar",
+  "PT_BPD"
+)
+
+# Keep selected stages only
+af_obj <- subset(
+  af_obj,
+  cells = rownames(af_obj@meta.data)[af_obj$Lung_Stage_Custom %in% stage_order]
+)
+
+af_obj$Lung_Stage_Custom <- factor(
+  af_obj$Lung_Stage_Custom,
+  levels = stage_order
+)
+
+# Check cells
+table(af_obj$Lung_Stage_Custom)
+table(af_obj$Donor, af_obj$Lung_Stage_Custom)
+
+# Gene list
+genes_use <- c(
+  "NGF-AS1","NGF","TGFB2","TGFBR2","FGF2","PDGFC",
+  "VEGFC","FGF10","FGF10-AS1","FGF1","PDGFRB","VEGFA",
+  "IGF2R","PDGFA","EGFR","EGFR-AS1","HGF","PDGFRL",
+  "TGFBR1","IGF2","VEGFB","PDGFD","IGF1","FGF7",
+  "IGF1R","NGFR","GDF15","TGFB1","PDGFB","VEGFD",
+  "PDGFA-DT","NGFR-AS1","BMPR2","ZEB1","ZEB2"
+)
+
+# Seurat v5: use layer, not slot
+expr_mat <- GetAssayData(
+  af_obj,
+  assay = "RNA",
+  layer = "data"
+)
+
+genes_use <- genes_use[genes_use %in% rownames(expr_mat)]
+
+expr_sub <- expr_mat[genes_use, ]
+
+meta <- af_obj@meta.data
+meta <- meta[colnames(expr_sub), ]
+
+# Average raw normalized expression by custom stage
+avg_exp_raw <- sapply(stage_order, function(stage) {
+  cells <- rownames(meta)[meta$Lung_Stage_Custom == stage]
+  Matrix::rowMeans(expr_sub[, cells, drop = FALSE])
+})
+
+avg_exp_raw <- as.matrix(avg_exp_raw)
+colnames(avg_exp_raw) <- stage_order
+
+# Remove genes with no expression or no variation
+avg_exp_raw <- avg_exp_raw[rowSums(avg_exp_raw) > 0, ]
+avg_exp_raw <- avg_exp_raw[apply(avg_exp_raw, 1, sd) > 0, ]
+
+# Row z-score
+avg_exp_z <- t(scale(t(avg_exp_raw)))
+avg_exp_z <- avg_exp_z[complete.cases(avg_exp_z), ]
+
+# Clip for plotting only
+avg_exp_z_clipped <- avg_exp_z
+avg_exp_z_clipped[avg_exp_z_clipped > 2] <- 2
+avg_exp_z_clipped[avg_exp_z_clipped < -2] <- -2
+
+# Plot heatmap in R window
+pheatmap(
+  avg_exp_z_clipped,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  border_color = NA,
+  fontsize_row = 6,
+  fontsize_col = 7,
+  cellwidth = 20,
+  cellheight = 7,
+  angle_col = 45,
+  color = colorRampPalette(c("#440154", "#31688E", "#35B779", "#FDE725"))(100),
+  breaks = seq(-2, 2, length.out = 101),
+  legend_breaks = c(-2, -1, 0, 1, 2),
+  legend_labels = c("-2", "-1", "0", "1", "2"),
+  main = "Alveolar Fibroblast"
+)
+
+# Save PDF
+pdf("Fig4G_AlveolarFibroblast_Heatmap.pdf", width = 4.5, height = 7)
+
+pheatmap(
+  avg_exp_z_clipped,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  border_color = NA,
+  fontsize_row = 6,
+  fontsize_col = 7,
+  cellwidth = 20,
+  cellheight = 7,
+  angle_col = 45,
+  color = colorRampPalette(c("#440154", "#31688E", "#35B779", "#FDE725"))(100),
+  breaks = seq(-2, 2, length.out = 101),
+  legend_breaks = c(-2, -1, 0, 1, 2),
+  legend_labels = c("-2", "-1", "0", "1", "2"),
+  main = "Alveolar Fibroblast"
+)
+
+dev.off()
+
+# Export matrices
+write.csv(
+  avg_exp_raw,
+  "Fig4G_AlveolarFibroblast_RawAverageExpression.csv"
+)
+
+write.csv(
+  avg_exp_z,
+  "Fig4G_AlveolarFibroblast_RowZscore.csv"
+)
+
+write.csv(
+  avg_exp_z_clipped,
+  "Fig4G_AlveolarFibroblast_RowZscore_Clipped_ForPlot.csv"
+)
+```
+
+
+```{r}
+pheatmap(
+  avg_exp_z,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  border_color = NA,
+
+  color = colorRampPalette(
+    c("#440154","#31688E","#35B779","#FDE725")
+  )(100),
+
+  breaks = seq(-1.5, 1.5, length.out = 101),
+
+  fontsize_row = 6,
+  fontsize_col = 7,
+  cellwidth = 18,
+  cellheight = 7,
+  angle_col = 45
+)
+```
+
+
+```{r}
+write.csv(
+  round(avg_exp_raw, 4),
+  "AlveolarFibroblast_RawAverageExpression.csv"
+)
+```
+
+```{r}
+write.csv(
+  round(avg_exp_z, 4),
+  "AlveolarFibroblast_RowZscore.csv"
+)
+```
+
+```{r}
+avg_exp_z_clipped <- avg_exp_z
+
+avg_exp_z_clipped[avg_exp_z_clipped > 1.5] <- 1.5
+avg_exp_z_clipped[avg_exp_z_clipped < -1.5] <- -1.5
+
+write.csv(
+  round(avg_exp_z_clipped, 4),
+  "AlveolarFibroblast_RowZscore_ClippedForPlot.csv"
+)
+```
+
