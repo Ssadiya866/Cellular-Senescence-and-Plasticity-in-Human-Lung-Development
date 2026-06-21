@@ -1,0 +1,130 @@
+---
+title: "Sankey 5G"
+output: html_document
+date: "2026-05-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# Step 2: Load packages
+library(readxl)
+library(dplyr)
+library(networkD3)
+library(htmlwidgets)
+```
+```{r}
+# Step 3: Set working directory
+# Change this to your folder
+setwd("C:/Users/Sshaikh9/Downloads")
+```
+```{r}
+# Step 4: Read DAVID-style Excel file
+df <- read_excel("Sankey_DAVID_style_source.xlsx", sheet = "Sankey_Links")
+```
+```{r}
+library(readxl)
+
+excel_sheets("Sankey_DAVID_style_source.xlsx")
+```
+```{r}
+df <- read_excel(
+  "Sankey_DAVID_style_source.xlsx",
+  sheet = 1
+)
+```
+
+```{r}
+library(dplyr)
+
+links <- df %>%
+  rename(
+    source = Gene,
+    target = Pathway,
+    value = Weight
+  )
+```
+
+```{r}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(networkD3)
+library(htmlwidgets)
+
+df <- read_excel("Sankey_DAVID_style_source.xlsx", sheet = 1)
+
+links <- df %>%
+  select(Term, Genes) %>%
+  separate_rows(Genes, sep = ";\\s*|,\\s*") %>%
+  mutate(
+    source = trimws(Genes),
+    target = trimws(Term),
+    value = 1,
+    group = target
+  ) %>%
+  filter(source != "", target != "")
+
+gene_order <- c(
+  "KMT2A", "NANAOG", "HSPA1A", "PCNA", "KRT8", "KRT7",
+  "NANOG", "KLF4", "DNMT3A", "MYCT2", "KDM6B", "KRT15",
+  "DMT3A", "MYCT1", "MYCBP2"
+)
+
+pathway_order <- c(
+  "MYC Pathway",
+  "FGF Signaling",
+  "TGF-β Pathway",
+  "ERK/MAPK signaling pathway",
+  "VEGFA-VEGFR2 Pathway",
+  "PPAR signaling pathway",
+  "Wnt/β-catenin signaling pathway",
+  "NOTCH Signaling Pathway"
+)
+
+nodes <- data.frame(
+  name = c(gene_order, pathway_order)
+)
+
+links <- links %>%
+  filter(source %in% nodes$name, target %in% nodes$name)
+
+links$IDsource <- match(links$source, nodes$name) - 1
+links$IDtarget <- match(links$target, nodes$name) - 1
+
+colourScale <- JS(
+  'd3.scaleOrdinal()
+    .domain(["MYC Pathway","FGF Signaling","TGF-β Pathway",
+             "ERK/MAPK signaling pathway","VEGFA-VEGFR2 Pathway",
+             "PPAR signaling pathway","Wnt/β-catenin signaling pathway",
+             "NOTCH Signaling Pathway"])
+    .range(["#9fd8e8","#77cfe0","#71d0c1",
+            "#8ea0c8","#f2a08b","#9aa8c8",
+            "#a8ded8","#cfe5a7"])'
+)
+
+p <- sankeyNetwork(
+  Links = links,
+  Nodes = nodes,
+  Source = "IDsource",
+  Target = "IDtarget",
+  Value = "value",
+  NodeID = "name",
+  LinkGroup = "group",
+  colourScale = colourScale,
+  fontSize = 22,
+  fontFamily = "Arial",
+  nodeWidth = 22,
+  nodePadding = 15,
+  sinksRight = TRUE,
+  iterations = 0
+)
+
+p
+# 6. Save as HTML
+saveWidget(p, "Gene_Pathway_Sankey.html", selfcontained = TRUE)
+```
+
