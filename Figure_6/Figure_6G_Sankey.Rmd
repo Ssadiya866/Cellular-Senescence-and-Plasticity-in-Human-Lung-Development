@@ -1,5 +1,5 @@
 ---
-title: "Sankey 5G"
+title: "Figure 6G_Sankey"
 output: html_document
 date: "2026-05-27"
 ---
@@ -7,7 +7,6 @@ date: "2026-05-27"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
 
 ```{r}
 # Step 2: Load packages
