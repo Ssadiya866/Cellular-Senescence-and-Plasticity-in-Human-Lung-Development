@@ -45,7 +45,7 @@ Analyses were performed using the integrated Harmony-corrected and Azimuth-annot
 
 - Gene Set Enrichment Analysis (GSEA) for developmental activation scoring (Panel A)
 - Extraction and visualization of scaled gene expression values (Panel B)
-- Aggregate expression analysis (Panel E)
+- Aggregate expression analysis of growth factor receptor and signaling-associated genes across EC capillary, AT2, and alveolar fibroblast populations during lung development and BPD. (Panel E)
 - Feature plot visualization (Panel F)
 - Heatmap generation (Panels D, G, H, J)
 - DAVID/PANTHER functional annotation and pathway enrichment analysis (Panel K)
