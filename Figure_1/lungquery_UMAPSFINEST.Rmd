@@ -1,5 +1,5 @@
 ---
-title: "lungquery_UMAPS_FINEST"
+title: "Figure_1C_Azimuth_Finest_UMAP"
 output: html_document
 date: "2026-05-15"
 ---
@@ -15,7 +15,8 @@ library(ggplot2)
 library(gridExtra)
 ```
 ```{r}
-lungQuery <-readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_Az_Normalized.rds")
+# Path to integrated object used for analysis
+lungQuery <- readRDS("path_to_object/lungQuery_After_Az_Normalized.rds")
 ```
 ```{r azimuth_umap, echo=TRUE, warning=FALSE, message=FALSE}
 dir.create("Plots_UMAP", showWarnings = FALSE)
