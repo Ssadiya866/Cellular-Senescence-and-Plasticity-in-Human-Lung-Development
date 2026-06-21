@@ -1,0 +1,85 @@
+---
+title: "Barplot level1"
+output: html_document
+date: "2026-05-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+```
+
+```{r}
+getwd()
+```
+
+```{r cell_proportion_level1, echo=TRUE, warning=FALSE, message=FALSE}
+dir.create("Plots_Barplot", showWarnings = FALSE)
+
+meta_level1 <- readRDS("C:/Users/Sshaikh9/Documents/meta_level1.rds")
+
+prop_level1 <- meta_level1 %>%
+  dplyr::count(Donor_Group, predicted.ann_level_1) %>%
+  dplyr::group_by(Donor_Group) %>%
+  dplyr::mutate(percent = 100 * n / sum(n)) %>%
+  dplyr::ungroup()
+
+prop_level1 <- prop_level1 %>%
+  dplyr::filter(
+    Donor_Group != "Aged_or_Diseased",
+    Donor_Group != "NA"
+  )
+prop_level1$Donor_Group <- factor(
+  prop_level1$Donor_Group,
+  levels = c(
+    "PT_NEWBORN",
+    "FT_NEWBORN",
+    "INFANT",
+    "Children",
+    "Adolescent",
+    "Young_Adult",
+    "PT_BPD"
+  )
+)
+p_level1_bar <- ggplot(
+  prop_level1,
+  aes(
+    y = Donor_Group,
+    x = percent,
+    fill = predicted.ann_level_1
+  )
+) +
+  geom_col(color = "black", linewidth = 0.3) +
+  theme_bw() +
+  labs(
+    title = "Azimuth Level 1 Cell Proportions",
+    x = "Proportion",
+    y = "",
+    fill = "Level 1 Annotation"
+  ) +
+  theme(
+    axis.text.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 10),
+    legend.text = element_text(size = 11),
+    legend.title = element_text(size = 12, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold")
+  )
+ggsave(
+  filename = "Plots_Barplot/Level1_Cell_Proportions.png",
+  plot = p_level1_bar,
+  width = 12,
+  height = 8,
+  dpi = 300
+)
+
+print(p_level1_bar)
+
+knitr::include_graphics("Plots_Barplot/Level1_Cell_Proportions.png")
+```
+
