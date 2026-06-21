@@ -1,0 +1,42 @@
+---
+title: "lungquery_UMAPS"
+output: html_document
+date: "2026-05-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+```
+```{r}
+lungQuery <-readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_Az_Normalized.rds")
+```
+```{r azimuth_umap, echo=TRUE, warning=FALSE, message=FALSE}
+dir.create("Plots_UMAP", showWarnings = FALSE)
+
+p_l1 <- DimPlot(
+  lungQuery,
+  group.by = "predicted.ann_level_1",
+  label = TRUE,
+  pt.size = 0.01,
+  label.size = 6,
+  repel = TRUE,
+  raster = FALSE
+) + ggtitle("Azimuth Annotation - Level 1")
+
+print(p_l1)
+
+ggsave(
+  filename = "Plots_UMAP/UMAP_Azimuth_Level1.png",
+  plot = p_l1,
+  width = 10,
+  height = 8,
+  dpi = 300
+)
+
