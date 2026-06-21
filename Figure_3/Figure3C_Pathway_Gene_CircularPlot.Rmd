@@ -1,0 +1,162 @@
+---
+title: "Figure3C_Pathway_Gene_CircularPlot"
+output: html_document
+date: "2026-06-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Figure 3C Pathway–Gene Circular Visualization
+
+This workflow documents the pathway–gene circular visualization shown in Figure 3C.
+
+DAVID enrichment results were used to define enriched pathways, associated genes, and enrichment significance values. Pathway–gene relationships were visualized using the `circlize` package.
+
+```{r libraries}
+library(circlize)
+library(dplyr)
+library(readr)
+```
+
+```{r input_data}
+# Input file containing DAVID-derived pathway-gene relationships.
+#
+# Required columns:
+# Pathway, Gene, neg_log10_pvalue
+#
+# Example:
+# Pathway,Gene,neg_log10_pvalue
+# Cell adhesion,FN1,2.46
+# Cell adhesion,ITGB1,2.46
+# Wnt signaling pathway,WNT5A,1.49
+
+pathway_gene <- read.csv("path_to_input/Figure3C_Pathway_Gene_Input.csv")
+```
+
+```{r preprocessing}
+pathway_gene <- pathway_gene %>%
+  dplyr::select(Pathway, Gene, neg_log10_pvalue) %>%
+  dplyr::filter(!is.na(Pathway), !is.na(Gene)) %>%
+  dplyr::distinct()
+
+links <- pathway_gene %>%
+  dplyr::select(Pathway, Gene) %>%
+  dplyr::rename(
+    from = Pathway,
+    to = Gene
+  )
+
+pathways <- unique(links$from)
+genes <- unique(links$to)
+```
+
+```{r colors}
+# Sector colors distinguish pathway sectors from gene sectors.
+grid_colors <- c(
+  setNames(rep("#66C2A5", length(pathways)), pathways),
+  setNames(rep("#FC8D62", length(genes)), genes)
+)
+
+# Enrichment values can be used for external annotation/color scaling
+# during final figure assembly.
+pathway_scores <- pathway_gene %>%
+  dplyr::group_by(Pathway) %>%
+  dplyr::summarise(
+    neg_log10_pvalue = max(neg_log10_pvalue, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+```{r circular_plot, fig.width=12, fig.height=12}
+circos.clear()
+
+circos.par(
+  start.degree = 90,
+  gap.degree = 2,
+  track.margin = c(0.01, 0.01),
+  points.overflow.warning = FALSE
+)
+
+chordDiagram(
+  x = links,
+  grid.col = grid_colors,
+  transparency = 0.35,
+  annotationTrack = "grid",
+  preAllocateTracks = 1
+)
+
+circos.trackPlotRegion(
+  track.index = 1,
+  panel.fun = function(x, y) {
+
+    sector.name <- get.cell.meta.data("sector.index")
+    xlim <- get.cell.meta.data("xlim")
+    ylim <- get.cell.meta.data("ylim")
+
+    circos.text(
+      x = mean(xlim),
+      y = ylim[1],
+      labels = sector.name,
+      facing = "clockwise",
+      niceFacing = TRUE,
+      adj = c(0, 0.5),
+      cex = 0.45
+    )
+  },
+  bg.border = NA
+)
+
+circos.clear()
+```
+
+```{r save_output}
+# Optional PDF export
+pdf("Figure3C_Pathway_Gene_CircularPlot.pdf", width = 12, height = 12)
+
+circos.clear()
+
+circos.par(
+  start.degree = 90,
+  gap.degree = 2,
+  track.margin = c(0.01, 0.01),
+  points.overflow.warning = FALSE
+)
+
+chordDiagram(
+  x = links,
+  grid.col = grid_colors,
+  transparency = 0.35,
+  annotationTrack = "grid",
+  preAllocateTracks = 1
+)
+
+circos.trackPlotRegion(
+  track.index = 1,
+  panel.fun = function(x, y) {
+
+    sector.name <- get.cell.meta.data("sector.index")
+    xlim <- get.cell.meta.data("xlim")
+    ylim <- get.cell.meta.data("ylim")
+
+    circos.text(
+      x = mean(xlim),
+      y = ylim[1],
+      labels = sector.name,
+      facing = "clockwise",
+      niceFacing = TRUE,
+      adj = c(0, 0.5),
+      cex = 0.45
+    )
+  },
+  bg.border = NA
+)
+
+dev.off()
+circos.clear()
+```
+
+## Output
+
+Figure 3C shows a circular pathway–gene visualization generated from DAVID enrichment output and pathway-associated gene lists using the `circlize` package.
