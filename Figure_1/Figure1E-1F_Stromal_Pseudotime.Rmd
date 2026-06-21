@@ -1,6 +1,6 @@
 ```r
 ---
-title: "Figure 1F Stromal Pseudotime"
+title: "Figure 1E-1F Stromal Pseudotime"
 output: html_document
 date: "2026-06-21"
 ---
