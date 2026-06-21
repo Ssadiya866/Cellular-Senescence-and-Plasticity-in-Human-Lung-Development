@@ -1,0 +1,112 @@
+---
+title: "fIGURE 5i gf"
+output: html_document
+date: "2026-05-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(pheatmap)
+
+# -------------------------
+# JAK/STAT + WNT genes
+# -------------------------
+genes_use <- c(
+  "JAK1","JAK2","JAK3",
+  "STAT1","STAT2","STAT3","STAT4","STAT5A","STAT5B","STAT6",
+  "JAKMIP1","JAKMIP2","JAKMIP3",
+  "WNT1","WNT2","WNT2B","WNT3","WNT5A","WNT5B",
+  "WNT6","WNT7A","WNT7B","WNT8A","WNT9A","WNT10A","WNT10B","WNT11",
+  "STAT4-AS1","WNT5A-AS1","JAKMIP3-AS1","JAKMIP2-AS1"
+)
+
+genes_use <- genes_use[genes_use %in% rownames(lungQuery)]
+
+# -------------------------
+# Average expression
+# -------------------------
+avg_exp <- AverageExpression(
+  obj_hm,
+  features = genes_use,
+  group.by = "Heatmap_Group",
+  assays = "RNA",
+  slot = "data"
+)$RNA
+
+# Fix PT-BPD naming
+colnames(avg_exp) <- gsub("PT-BPD", "PT_BPD", colnames(avg_exp))
+
+group_order <- c(
+  "Canalicular",
+  "Early Saccular",
+  "Saccular",
+  "Alveolar",
+  "PT_BPD"
+)
+
+avg_exp <- avg_exp[, group_order, drop = FALSE]
+
+# -------------------------
+# Row z-score
+# -------------------------
+mat_wnt <- t(scale(t(avg_exp)))
+mat_wnt[is.na(mat_wnt)] <- 0
+
+# Cap values
+mat_wnt[mat_wnt > 2] <- 2
+mat_wnt[mat_wnt < -2] <- -2
+
+# -------------------------
+# Gene order similar to figure
+# -------------------------
+gene_order <- c(
+  "JAKMIP3","WNT8A","JAK3","STAT6","WNT7A","WNT9A",
+  "STAT2","WNT5B","WNT2","WNT10A","WNT11","WNT6",
+  "JAKMIP2-AS1","STAT1","WNT4","JAKMIP2","WNT3",
+  "JAKMIP1","WNT10B","WNT8B","WNT1","JAKMIP3-AS1",
+  "STAT1","WNT3","WNT5A-AS1","WNT9B","WNT2B",
+  "STAT4-AS1","WNT5A","JAK1","STAT5A","STAT5B",
+  "JAK2","STATM16","STAT3","STAT4","WNT7B"
+)
+
+gene_order <- unique(gene_order)
+gene_order <- gene_order[gene_order %in% rownames(mat_wnt)]
+
+mat_wnt <- mat_wnt[gene_order, ]
+
+# -------------------------
+# Plot
+# -------------------------
+pheatmap(
+  mat_wnt,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  color = colorRampPalette(c("blue","white","red"))(100),
+  breaks = seq(-2, 2, length.out = 101),
+  border_color = "black",
+  fontsize_row = 10,
+  fontsize_col = 10,
+  angle_col = 45,
+  main = "JAK/STAT and WNT signaling genes"
+)
+```
+
+```{r}
+write.csv(
+  avg_exp,
+  file = "JAK_WNT_AverageExpression.csv",
+  quote = FALSE
+)
+```
+```{r}
+write.csv(
+  mat_wnt,
+  file = "JAK_WNT_Heatmap_Zscore.csv",
+  quote = FALSE
+)
+```
+
