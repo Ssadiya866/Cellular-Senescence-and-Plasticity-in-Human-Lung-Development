@@ -1,0 +1,147 @@
+---
+title: "GO BP CC MF Barplot"
+output: html_document
+date: "2026-05-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+# READ EXCEL
+df <- read_excel(
+"Supplementary_Figure11C_DAVID_Annotated (1).xlsx",
+sheet = 1
+)
+
+# TRUE -log10(PVALUE)
+df <- df %>%
+  mutate(
+    logP = -log10(PValue)
+  )
+
+# ORDER
+df$Term <- factor(
+  df$Term,
+  levels = rev(c(
+
+    "Epithelial Cell Differentiation",
+    "Organelle Organization",
+    "DNA Methylation",
+    "Anatomical Structure Development",
+
+    "Response to Stress",
+    "Response to Injury",
+    "Regulation of Cell Proliferation",
+    "Embryonic Morphogenesis",
+
+    "Epigenetic Regulation",
+    "Positive regulation of Epithelial differentiation",
+    "Positive regulation of Alveolar cell proliferation",
+    "Positive regulation of Mesenchymal cell proliferation"
+
+  ))
+)
+
+# FACET ORDER
+df$Category <- factor(
+  df$Category,
+  levels = c("BP","CC","MF")
+)
+
+# PLOT
+p <- ggplot(
+  df,
+  aes(
+    x = logP,
+    y = Term,
+    fill = logP
+  )
+) +
+
+geom_col(
+  width = 0.8
+) +
+
+facet_grid(
+  Category ~ .,
+  scales = "free_y",
+  space = "free_y",
+  switch = "y"
+) +
+
+# COLOR SCALE
+scale_fill_gradientn(
+  name = "-log10(PValue)",
+
+  colours = c(
+    "#ff7a1a",
+    "#e26d6d",
+    "#a96ac3",
+    "#5b63f0",
+    "#2f6df6"
+  ),
+
+  guide = guide_colorbar(
+    barheight = 10,
+    barwidth = 1
+  )
+) +
+
+labs(
+  x = "-log10(PValue)",
+  y = NULL
+) +
+
+theme_bw(base_size = 12) +
+
+theme(
+
+  legend.position = "right",
+
+  strip.background = element_rect(
+    fill = "grey90",
+    color = "black"
+  ),
+
+  strip.text.y.left = element_text(
+    angle = 90,
+    face = "bold",
+    size = 11
+  ),
+
+  panel.grid.major = element_line(
+    color = "grey90"
+  ),
+
+  panel.grid.minor = element_blank(),
+
+  axis.text.y = element_text(
+    size = 10,
+    color = "black"
+  ),
+
+  axis.text.x = element_text(
+    size = 10,
+    color = "black"
+  )
+
+)
+
+p
+
+# SAVE
+ggsave(
+  "Supplementary_Figure11C_TRUE_PVALUE.png",
+  plot = p,
+  width = 8,
+  height = 7,
+  dpi = 300
+)
+```
+
