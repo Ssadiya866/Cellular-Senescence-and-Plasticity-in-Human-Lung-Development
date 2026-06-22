@@ -1,0 +1,17 @@
+## Supplementary Figure 8D-GSEA Enrichment Across Epithelial Populations
+
+Gene Set Enrichment Analysis (GSEA) of epithelial populations across developmental and transitional cell states.
+
+### Workflow
+
+- Ranked gene lists were generated from differential expression analyses.
+- Gene Set Enrichment Analysis was performed using predefined biological gene sets.
+- Normalized Enrichment Scores (NES) were calculated.
+- Enrichment patterns were compared across epithelial populations.
+
+### Software
+
+- R
+- clusterProfiler
+- fgsea
+- ggplot2
