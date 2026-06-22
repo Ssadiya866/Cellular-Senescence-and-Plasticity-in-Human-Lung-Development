@@ -1,5 +1,5 @@
 ---
-title: "Figure 9B and 9C Sankey"
+title: "SuppFig6B-6C_EpithelialStromal_Sankey"
 output:
   html_document:
     self_contained: true
