@@ -1,0 +1,105 @@
+---
+title: "Immune Lineage Cell Proportion Plot"
+output: html_document
+date: "2026-05-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+```
+
+```{r}
+getwd()
+```
+
+```{r immune_lineage_barplot, echo=TRUE, warning=FALSE, message=FALSE}
+dir.create("Plots_Barplot", showWarnings = FALSE)
+
+meta_level1 <- readRDS("C:/Users/Sshaikh9/Documents/meta_level1.rds")
+
+immune_celltypes <- c(
+  "Alveolar macrophages",
+  "B cells",
+  "CD4 T cells",
+  "CD8 T cells",
+  "Classical monocytes",
+  "Interstitial Mφ perivascular",
+  "Mast cells",
+  "Monocyte-derived Mφ",
+  "NK cells",
+  "Non-classical monocytes",
+  "Plasma cells",
+  "Plasmacytoid DCs",
+  "T cells proliferating"
+)
+
+prop_immune <- meta_level1 %>%
+  dplyr::count(Donor_Group, predicted.ann_finest_level) %>%
+  dplyr::filter(
+    Donor_Group != "Aged_or_Diseased",
+    Donor_Group != "NA",
+    predicted.ann_finest_level %in% immune_celltypes
+  ) %>%
+  dplyr::group_by(Donor_Group) %>%
+  dplyr::mutate(percent = 100 * n / sum(n)) %>%
+  dplyr::ungroup()
+
+prop_immune$Donor_Group <- factor(
+  prop_immune$Donor_Group,
+  levels = c(
+    "PT_NEWBORN",
+    "FT_NEWBORN",
+    "INFANT",
+    "Children",
+    "Adolescent",
+    "Young_Adult",
+    "PT_BPD"
+  )
+)
+
+p_immune_bar <- ggplot(
+  prop_immune,
+  aes(
+    x = Donor_Group,
+    y = percent,
+    fill = predicted.ann_finest_level
+  )
+) +
+  geom_col(color = "black", linewidth = 0.3) +
+  theme_bw() +
+  labs(
+    title = "Immune Cell Lineage Proportions",
+    x = "",
+    y = "Proportion",
+    fill = "Immune Lineage"
+  ) +
+  theme(
+    axis.text.x = element_text(size = 11, face = "bold", angle = 90, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 13, face = "bold"),
+    legend.text = element_text(size = 9),
+    legend.title = element_text(size = 11, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  )
+
+ggsave(
+  filename = "Plots_Barplot/Immune_Lineage_Cell_Proportions.png",
+  plot = p_immune_bar,
+  width = 11,
+  height = 7,
+  dpi = 300
+)
+
+print(p_immune_bar)
+
+knitr::include_graphics("Plots_Barplot/Immune_Lineage_Cell_Proportions.png")
+
+```
+
