@@ -1,5 +1,5 @@
 ---
-title: "lungquery_UMAPS_FINEST"
+title: "SuppFig2A_Epithelial_UMAP.Rmd"
 output: html_document
 date: "2026-05-15"
 ---
