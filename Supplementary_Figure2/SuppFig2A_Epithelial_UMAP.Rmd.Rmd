@@ -1,0 +1,61 @@
+---
+title: "lungquery_UMAPS_FINEST"
+output: html_document
+date: "2026-05-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+```
+```{r}
+lungQuery <-readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_Az_Normalized.rds")
+print(dim(lungQuery))
+```
+```{r epithelial_umap, echo=TRUE, warning=FALSE, message=FALSE}
+dir.create("Plots_UMAP", showWarnings = FALSE)
+
+epithelial_celltypes <- c(
+  "AT1", "AT2", "AT2 proliferating", "Basal resting",
+  "Club (non-nasal)", "Goblet (bronchial)", "Ionocyte",
+  "Transitional Club-AT2"
+)
+
+epi <- subset(
+  lungQuery,
+  subset = predicted.ann_finest_level %in% epithelial_celltypes
+)
+
+p_epi_umap <- DimPlot(
+  epi,
+  group.by = "predicted.ann_finest_level",
+  label = TRUE,
+  repel = TRUE,
+  pt.size = 0.01,
+  label.size = 4,
+  raster = FALSE
+) +
+  ggtitle("Epithelial Cell Subclusters")
+
+ggsave(
+  filename = "Plots_UMAP/Epithelial_Lineage_UMAP.png",
+  plot = p_epi_umap,
+  width = 10,
+  height = 8,
+  dpi = 300,
+  limitsize = FALSE
+)
+
+print(p_epi_umap)
+
+knitr::include_graphics("Plots_UMAP/Epithelial_Lineage_UMAP.png")
+```
+
+
+
