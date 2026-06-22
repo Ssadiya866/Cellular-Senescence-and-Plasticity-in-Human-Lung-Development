@@ -1,5 +1,5 @@
 ---
-title: "GO and KEGG Enrichment Lollipop Plot"
+title: "SuppFig5C_PathwayEnrichment"
 output: html_document
 date: "2026-05-27"
 ---
