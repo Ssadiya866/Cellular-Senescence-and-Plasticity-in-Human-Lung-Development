@@ -1,6 +1,5 @@
 ---
-title: "Rahman_Visium_HD_062925"
-author: "Jennifer Becker"
+title: "Supplementary_Figure 11_Visium_HD"
 date: "2026-06-04"
 output: html_document
 ---
