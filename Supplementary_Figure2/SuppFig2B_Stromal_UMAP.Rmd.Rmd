@@ -1,5 +1,5 @@
 ---
-title: "lungquery Stromal Cell Lineage UMAP"
+title: "SuppFig2B_Stromal_UMAP"
 output: html_document
 date: "2026-05-15"
 ---
