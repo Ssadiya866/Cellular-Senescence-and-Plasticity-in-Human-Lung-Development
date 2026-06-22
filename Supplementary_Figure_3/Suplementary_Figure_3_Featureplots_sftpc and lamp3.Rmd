@@ -1,0 +1,83 @@
+---
+title: "Feature Plot supp 8"
+output: html_document
+date: "2026-05-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+```
+
+```{r}
+lungQuery <-readRDS("C:/Users/Sshaikh9/Downloads/lungQuery_After_Az_Normalized.rds")
+```
+```{r}
+features_all <- c("TGFBR2", 
+"IGF1R",
+"EGFR",
+"PDGFRA",
+"IL6ST",
+"IGFBP5",
+"CDKN1B",
+"MYCBP2",
+"BMPR2",
+"JAK1",
+"ZEB2",
+"ZEB1",
+"KMT2A",
+"DNMT3A",
+"DNMT1",
+"FOXO1",
+"RUNX1",
+"CDKN1A",
+"MALAT1",
+"NEAT1")
+```
+
+features_all <- c("AOPEP","CD44","SPRR1A","KRT78","CST1","HOXC11")
+custom <- subset(lungQuery, subset = Donor_Group %in% groups)
+
+lungQuery <- 
+
+```{r}
+getwd()
+```
+
+
+feat <- 'NEAT1'
+```{r featureplots, echo=TRUE, warning=FALSE, message=FALSE}
+dir.create("Plots6", showWarnings = FALSE)
+
+features_all <- c("SFTPC", "LAMP3")
+
+for (feat in features_all) {
+
+  p <- FeaturePlot(
+    object = lungQuery,
+    features = feat,
+    split.by = "Donor_Group",
+    raster = FALSE,
+    cols = c("#89cff0", "grey", "red")
+  ) +
+    patchwork::plot_layout(ncol = 2, nrow = 4) &
+    ggplot2::theme(legend.position = "right")
+
+  print(p)
+
+  ggsave(
+    filename = paste0("Plots6/FeaturePlot_", feat, "_All.png"),
+    plot = p,
+    width = 10,
+    height = 12,
+    dpi = 300
+  )
+}
+```
+
